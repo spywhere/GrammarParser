@@ -2,7 +2,7 @@ import sublime
 import sublime_plugin
 import os
 import traceback
-from GrammarParser import GrammarParser
+from .GrammarParser import GrammarParser
 
 
 class GrammarParserCommand(sublime_plugin.TextCommand):
@@ -33,7 +33,7 @@ class GrammarParserCommand(sublime_plugin.TextCommand):
             fd = BrowseDialog(initial_dir=initial_dir, on_done=self.on_select_new_grammar)
             fd.browse(prelist=self.file_prelist)
         else:
-            self.on_select_new_grammar(grammar=self.grammars[index], new_grammar=False)
+            self.on_select_new_grammar(grammar=self.grammars[index][1], new_grammar=False)
 
     def on_select_new_grammar(self, grammar, new_grammar=True):
         settings = sublime.load_settings("GrammarParser.sublime-settings")
@@ -50,9 +50,12 @@ class GrammarParserCommand(sublime_plugin.TextCommand):
         sublime.status_message(self.parse_document(grammar, selectors))
 
     def parse_document(self, grammar, selectors):
+        print("[GrammarParser] Using Grammar: %s" % (grammar))
         status_text = "Error occurred while parsing"
         try:
-            parser = GrammarParser(sublime.decode_value(sublime.load_resource(grammar)))
+            grammar_file = open(grammar, "r")
+            grammar = sublime.decode_value(grammar_file.read())
+            parser = GrammarParser(grammar)
             parse_output = parser.parse_grammar(self.view.substr(sublime.Region(0, self.view.size())))
             status_text = ""
             if parse_output["success"]:
